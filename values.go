@@ -1,6 +1,9 @@
 package trace_record
 
-// import "encoding/json"
+import (
+	"encoding/json"
+	"strconv"
+)
 
 type TypeId uint64
 
@@ -110,11 +113,58 @@ func IntValue(i int64, typeId TypeId) IntValueRecord {
 
 type FloatValueRecord struct {
 	Kind   string  `json:"kind"`
-	F      float64 `json:"f"`
+	F      float64 `json:"-"`
 	TypeId TypeId  `json:"type_id"`
 }
 
 func (i FloatValueRecord) IsValueRecord() {}
+
+// MarshalJSON serializes the float value with the "f" field as a string,
+// matching the Rust canonical format (serde_with::DisplayFromStr).
+func (r FloatValueRecord) MarshalJSON() ([]byte, error) {
+	type Alias struct {
+		Kind   string `json:"kind"`
+		F      string `json:"f"`
+		TypeId TypeId `json:"type_id"`
+	}
+	return json.Marshal(Alias{
+		Kind:   r.Kind,
+		F:      strconv.FormatFloat(r.F, 'f', -1, 64),
+		TypeId: r.TypeId,
+	})
+}
+
+// UnmarshalJSON deserializes the float value, accepting "f" as either
+// a JSON string or a JSON number for backward compatibility.
+func (r *FloatValueRecord) UnmarshalJSON(data []byte) error {
+	type Alias struct {
+		Kind   string          `json:"kind"`
+		F      json.RawMessage `json:"f"`
+		TypeId TypeId          `json:"type_id"`
+	}
+	var a Alias
+	if err := json.Unmarshal(data, &a); err != nil {
+		return err
+	}
+	r.Kind = a.Kind
+	r.TypeId = a.TypeId
+	// Try string first (canonical format), then bare number (legacy)
+	var s string
+	if err := json.Unmarshal(a.F, &s); err == nil {
+		f, err := strconv.ParseFloat(s, 64)
+		if err != nil {
+			return err
+		}
+		r.F = f
+	} else {
+		var f float64
+		if err := json.Unmarshal(a.F, &f); err != nil {
+			return err
+		}
+		r.F = f
+	}
+	return nil
+}
 
 func FloatValue(f float64, typeId TypeId) FloatValueRecord {
 	return FloatValueRecord{"Float", f, typeId}
@@ -172,14 +222,14 @@ func SequenceValue(elements []ValueRecord, isSlice bool, typeId TypeId) Sequence
 type ReferenceValueRecord struct {
 	Kind         string      `json:"kind"`
 	Dereferenced ValueRecord `json:"dereferenced"`
-	Address      uint32      `json:"address"`
+	Address      uint64      `json:"address"`
 	Mutable      bool        `json:"mutable"`
 	TypeId       TypeId      `json:"type_id"`
 }
 
 func (s ReferenceValueRecord) IsValueRecord() {}
 
-func ReferenceValue(dereferenced ValueRecord, address uint32, mutable bool, typeId TypeId) ReferenceValueRecord {
+func ReferenceValue(dereferenced ValueRecord, address uint64, mutable bool, typeId TypeId) ReferenceValueRecord {
 	return ReferenceValueRecord{"Reference", dereferenced, address, mutable, typeId}
 }
 
