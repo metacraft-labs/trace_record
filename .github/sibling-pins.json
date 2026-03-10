@@ -1,0 +1,4 @@
+{
+  "codetracer": "main",
+  "codetracer-wasm-recorder": "wasm-tracing"
+}
