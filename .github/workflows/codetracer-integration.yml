@@ -40,8 +40,6 @@ jobs:
         uses: metacraft-labs/metacraft-github-actions/setup-nix@main
         with:
           gh-token: ${{ secrets.GH_READ_METACRAFT_PRIVATE_REPOS }}
-          cachix-cache: ${{ vars.CACHIX_CACHE }}
-          cachix-auth-token: ${{ secrets.CACHIX_AUTH_TOKEN }}
           substituters: ${{ vars.SUBSTITUTERS }}
           trusted-public-keys: ${{ vars.TRUSTED_PUBLIC_KEYS }}
 
