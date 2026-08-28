@@ -37,7 +37,7 @@ jobs:
           fi
 
       - name: Setup Nix and Git authentication
-        uses: metacraft-labs/metacraft-github-actions/setup-nix@main
+        uses: metacraft-labs/metacraft-github-actions/setup-nix@dev
         with:
           gh-token: ${{ secrets.GH_READ_METACRAFT_PRIVATE_REPOS }}
           substituters: ${{ vars.SUBSTITUTERS }}
@@ -70,7 +70,7 @@ jobs:
           echo "Resolved wasm-recorder ref: $WR_REF"
 
       - name: Clone codetracer
-        uses: metacraft-labs/metacraft-github-actions/clone-repo@main
+        uses: metacraft-labs/metacraft-github-actions/clone-repo@dev
         with:
           repo: metacraft-labs/codetracer
           ref: ${{ steps.resolve-refs.outputs.codetracer_ref }}
@@ -79,7 +79,7 @@ jobs:
           submodules: 'true'
 
       - name: Clone wasm-recorder
-        uses: metacraft-labs/metacraft-github-actions/clone-repo@main
+        uses: metacraft-labs/metacraft-github-actions/clone-repo@dev
         with:
           repo: metacraft-labs/codetracer-wasm-recorder
           ref: ${{ steps.resolve-refs.outputs.wasm_recorder_ref }}
