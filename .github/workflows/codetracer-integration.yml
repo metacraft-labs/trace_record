@@ -96,8 +96,11 @@ jobs:
             echo 'replace github.com/metacraft-labs/trace_record => ../trace_record' >> go.mod
           fi
 
-          # Update go.sum
-          go mod tidy || true
+          # Update go.sum. `go` comes from the codetracer dev shell (as in the
+          # build step below), not from the runner PATH: run bare, this died
+          # with "go: command not found" and `|| true` hid it, so go.sum was
+          # never updated for the replace directive above.
+          nix develop ../codetracer?submodules=1 --command go mod tidy
 
       - name: Build wazero
         run: |
